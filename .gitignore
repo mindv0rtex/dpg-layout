@@ -1,0 +1,9 @@
+# CMake output
+cmake-build-debug
+cmake-build-release
+
+# CLion
+**/.idea
+
+# enaml is not a real dependency
+/deps/enaml

@@ -1,0 +1,3 @@
+[submodule "deps/kiwi"]
+	path = deps/kiwi
+	url = https://github.com/nucleic/kiwi.git
