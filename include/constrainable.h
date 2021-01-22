@@ -12,9 +12,9 @@ namespace layout {
 // An abstract constrainable class.
 struct Constrainable {
   explicit Constrainable(const std::string& name)
-      : left(name.append("_left")), top(name.append("_top")), width(name.append("_width")),
-        height(name.append("_height")), right(left + width), bottom(top + height), h_center(left + 0.5 * width),
-        v_center(top + 0.5 * height), hug_width(ConstraintStrength::STRONG), hug_height(ConstraintStrength::STRONG),
+      : left(name + "_left"), top(name + "_top"), width(name + "_width"), height(name + "_height"), right(left + width),
+        bottom(top + height), h_center(left + 0.5 * width), v_center(top + 0.5 * height),
+        hug_width(ConstraintStrength::STRONG), hug_height(ConstraintStrength::STRONG),
         resist_width(ConstraintStrength::STRONG), resist_height(ConstraintStrength::STRONG),
         limit_width(ConstraintStrength::IGNORE), limit_height(ConstraintStrength::IGNORE) {}
 
@@ -64,10 +64,10 @@ struct Constrainable {
 // An abstract constrainable that contains other widgets.
 struct ContentsConstrainable : Constrainable {
   explicit ContentsConstrainable(const std::string& name)
-      : Constrainable(name), contents_left(name.append("_contents_left")),
-        contents_right(name.append("_contents_right")), contents_top(name.append("_contents_top")),
-        contents_bottom(name.append("_contents_bottom")), contents_width(contents_right - contents_left),
-        contents_height(contents_bottom - contents_top), contents_h_center(contents_left + 0.5 * contents_width),
+      : Constrainable(name), contents_left(name + "_contents_left"), contents_right(name + "_contents_right"),
+        contents_top(name + "_contents_top"), contents_bottom(name + "_contents_bottom"),
+        contents_width(contents_right - contents_left), contents_height(contents_bottom - contents_top),
+        contents_h_center(contents_left + 0.5 * contents_width),
         contents_v_center(contents_top + 0.5 * contents_height) {}
 
   // Left contents boundary.
