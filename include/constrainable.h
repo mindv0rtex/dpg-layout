@@ -6,41 +6,38 @@
 #include "kiwi/variable.h"
 
 #include <string>
+#include <unordered_map>
+#include <variant>
 
 namespace layout {
 
 // An abstract constrainable class.
 struct Constrainable {
   explicit Constrainable(const std::string& name)
-      : left(name + "_left"), top(name + "_top"), width(name + "_width"), height(name + "_height"), right(left + width),
-        bottom(top + height), h_center(left + 0.5 * width), v_center(top + 0.5 * height),
-        hug_width(ConstraintStrength::STRONG), hug_height(ConstraintStrength::STRONG),
+      : hug_width(ConstraintStrength::STRONG), hug_height(ConstraintStrength::STRONG),
         resist_width(ConstraintStrength::STRONG), resist_height(ConstraintStrength::STRONG),
-        limit_width(ConstraintStrength::IGNORE), limit_height(ConstraintStrength::IGNORE) {}
+        limit_width(ConstraintStrength::IGNORE), limit_height(ConstraintStrength::IGNORE) {
+    // Left boundary.
+    variables.try_emplace("left", name + "_left");
+    // Top boundary.
+    variables.try_emplace("top", name + "_top");
+    // Width.
+    variables.try_emplace("width", name + "_width");
+    // Height.
+    variables.try_emplace("height", name + "_height");
 
-  // Left boundary.
-  kiwi::Variable left;
+    // Right boundary.
+    expressions.try_emplace("right", variables.at("left") + variables.at("width"));
+    // Bottom boundary.
+    expressions.try_emplace("bottom", variables.at("top") + variables.at("height"));
+    // Horizontal center.
+    expressions.try_emplace("h_center", variables.at("left") + 0.5 * variables.at("width"));
+    // Vertical center.
+    expressions.try_emplace("v_center", variables.at("top") + 0.5 * variables.at("height"));
+  }
 
-  // Top boundary.
-  kiwi::Variable top;
-
-  // Width.
-  kiwi::Variable width;
-
-  // Height.
-  kiwi::Variable height;
-
-  // Right boundary.
-  kiwi::Expression right;
-
-  // Bottom boundary.
-  kiwi::Expression bottom;
-
-  // Horizontal center.
-  kiwi::Expression h_center;
-
-  // Vertical center.
-  kiwi::Expression v_center;
+  std::unordered_map<std::string, kiwi::Variable> variables;
+  std::unordered_map<std::string, kiwi::Expression> expressions;
 
   // How strongly a widget hugs its width hint, i.e. width == hint | hug_width
   ConstraintStrength hug_width;
@@ -63,36 +60,25 @@ struct Constrainable {
 
 // An abstract constrainable that contains other widgets.
 struct ContentsConstrainable : Constrainable {
-  explicit ContentsConstrainable(const std::string& name)
-      : Constrainable(name), contents_left(name + "_contents_left"), contents_right(name + "_contents_right"),
-        contents_top(name + "_contents_top"), contents_bottom(name + "_contents_bottom"),
-        contents_width(contents_right - contents_left), contents_height(contents_bottom - contents_top),
-        contents_h_center(contents_left + 0.5 * contents_width),
-        contents_v_center(contents_top + 0.5 * contents_height) {}
+  explicit ContentsConstrainable(const std::string& name) : Constrainable(name) {
+    // Left contents boundary.
+    variables.try_emplace("contents_left", name + "_contents_left");
+    // Right contents boundary.
+    variables.try_emplace("contents_right", name + "_contents_right");
+    // Top contents boundary.
+    variables.try_emplace("contents_top", name + "_contents_top");
+    // Bottom contents boundary.
+    variables.try_emplace("contents_bottom", name + "_contents_bottom");
 
-  // Left contents boundary.
-  kiwi::Variable contents_left;
-
-  // Right contents boundary.
-  kiwi::Variable contents_right;
-
-  // Top contents boundary.
-  kiwi::Variable contents_top;
-
-  // Bottom contents boundary.
-  kiwi::Variable contents_bottom;
-
-  // Contents width.
-  kiwi::Expression contents_width;
-
-  // Contents height.
-  kiwi::Expression contents_height;
-
-  // Contents horizontal center.
-  kiwi::Expression contents_h_center;
-
-  // Contents vertical center.
-  kiwi::Expression contents_v_center;
+    // Contents width.
+    expressions.try_emplace("contents_width", variables.at("contents_right") - variables.at("contents_left"));
+    // Contents height.
+    expressions.try_emplace("contents_height", variables.at("contents_bottom") - variables.at("contents_top"));
+    // Contents horizontal center.
+    expressions.try_emplace("contents_h_center", variables.at("contents_left") + 0.5 * variables.at("contents_width"));
+    // Contents vertical center.
+    expressions.try_emplace("contents_v_center", variables.at("contents_top") + 0.5 * variables.at("contents_height"));
+  }
 };
 
 }  // namespace layout

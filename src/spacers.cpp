@@ -1,28 +1,64 @@
 #include "spacers.h"
 
 namespace layout {
-FlexSpacer::FlexSpacer(int size, Strength min_str, Strength eq_str)
-    : size(size), min_strength(min_str.empty() ? Strength(ConstraintStrength::REQUIRED) : min_str),
-      eq_strength(eq_str.empty() ? Strength(ConstraintStrength::MEDIUM) * 1.25 : eq_str) {}
 
-std::vector<kiwi::Constraint> create_constraints(
-    const Spacer& spacer, const LinearSymbolic& first, const LinearSymbolic& second, Strength s) {
-  kiwi::Expression e = std::visit([](auto& f, auto& s) { return s - f; }, first, second);
+// ------------------------------------------------------------------
+// Spacer
+// ------------------------------------------------------------------
 
-  auto cns = std::visit(
-      utils::overload{
-          [&](const EqSpacer& s) -> std::vector<kiwi::Constraint> { return {e == s.size}; },
-          [&](const LeSpacer& s) -> std::vector<kiwi::Constraint> {
-            return {e <= s.size, e >= 0.0};
-          },
-          [&](const GeSpacer& s) -> std::vector<kiwi::Constraint> { return {e >= s.size}; },
-          [&](const FlexSpacer& s) -> std::vector<kiwi::Constraint> {
-            return {e >= s.size | s.min_strength, e == s.size | s.eq_strength};
-          }},
-      spacer);
-  if (!s.empty() && !s.ignored()) {
-    std::transform(cns.begin(), cns.end(), cns.begin(), [&](auto& cn) { return cn | s; });
+Spacer::Spacer(int sz, Strength str) : size(sz), strength(str) {}
+
+Spacer& Spacer::operator|(Strength str) {
+  strength = str;
+  return *this;
+}
+
+std::vector<kiwi::Constraint> Spacer::create_constraints(
+    const LinearSymbolic& first, const LinearSymbolic& second) const {
+  auto cns = this->constraints(first, second);
+  if (!strength.empty() && !strength.ignored()) {
+    std::transform(cns.begin(), cns.end(), cns.begin(), [&](auto& cn) { return cn | strength; });
   }
   return cns;
+}
+
+// ------------------------------------------------------------------
+// EqSpacer
+// ------------------------------------------------------------------
+
+std::vector<kiwi::Constraint> EqSpacer::constraints(const LinearSymbolic& first, const LinearSymbolic& second) const {
+  kiwi::Expression e = std::visit([](auto& f, auto& s) { return s - f; }, first, second);
+  return {e == size};
+}
+
+// ------------------------------------------------------------------
+// LeSpacer
+// ------------------------------------------------------------------
+
+std::vector<kiwi::Constraint> LeSpacer::constraints(const LinearSymbolic& first, const LinearSymbolic& second) const {
+  kiwi::Expression e = std::visit([](auto& f, auto& s) { return s - f; }, first, second);
+  return {e <= size, e >= 0.0};
+}
+
+// ------------------------------------------------------------------
+// GeSpacer
+// ------------------------------------------------------------------
+
+std::vector<kiwi::Constraint> GeSpacer::constraints(const LinearSymbolic& first, const LinearSymbolic& second) const {
+  kiwi::Expression e = std::visit([](auto& f, auto& s) { return s - f; }, first, second);
+  return {e >= size};
+}
+
+// ------------------------------------------------------------------
+// FlexSpacer
+// ------------------------------------------------------------------
+
+FlexSpacer::FlexSpacer(int size, Strength str, Strength min_str, Strength eq_str)
+    : Spacer(size, str), min_strength(min_str.empty() ? Strength(ConstraintStrength::REQUIRED) : min_str),
+      eq_strength(eq_str.empty() ? Strength(ConstraintStrength::MEDIUM) * 1.25 : eq_str) {}
+
+std::vector<kiwi::Constraint> FlexSpacer::constraints(const LinearSymbolic& first, const LinearSymbolic& second) const {
+  kiwi::Expression e = std::visit([](auto& f, auto& s) { return s - f; }, first, second);
+  return {e >= size | min_strength, e == size | eq_strength};
 }
 }  // namespace layout

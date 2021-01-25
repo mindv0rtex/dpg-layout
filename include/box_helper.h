@@ -6,11 +6,9 @@
 
 namespace layout {
 
-struct Box: Constrainable {
+struct BoxHelper : Constrainable {
 
   std::vector<kiwi::Constraint> box_constraints(const Constrainable& c);
-
-  std::vector<kiwi::Constraint> box_constraints(const ContentsConstrainable& c);
 };
 
 
