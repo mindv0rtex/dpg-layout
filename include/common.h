@@ -13,4 +13,9 @@ public:
       : std::logic_error(std::string(prefix).append(" : Function not implemented!")){};
 };
 
+class LayoutLogicError : public std::logic_error {
+public:
+  explicit LayoutLogicError(const char* prefix) : std::logic_error(prefix){};
+};
+
 }  // namespace layout

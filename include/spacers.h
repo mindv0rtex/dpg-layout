@@ -8,11 +8,11 @@
 
 namespace layout {
 
-class Spacer {
+class BaseSpacer {
 public:
-  explicit Spacer(int sz, Strength str = Strength());
+  explicit BaseSpacer(int sz, Strength str = Strength());
 
-  Spacer& operator|(Strength str);
+  BaseSpacer& operator|(Strength str);
 
   [[nodiscard]] std::vector<kiwi::Constraint> create_constraints(
       const LinearSymbolic& first, const LinearSymbolic& second) const;
@@ -27,25 +27,28 @@ private:
 };
 
 // A spacer which represents a fixed amount of space.
-class EqSpacer : public Spacer {
+class EqSpacer : public BaseSpacer {
   [[nodiscard]] std::vector<kiwi::Constraint> constraints(
       const LinearSymbolic& first, const LinearSymbolic& second) const override;
+
+public:
+  EqSpacer(int sz) : BaseSpacer(sz) {}
 };
 
 // A spacer which represents a flexible space with a maximum value.
-class LeSpacer : Spacer {
+class LeSpacer : public BaseSpacer {
   [[nodiscard]] std::vector<kiwi::Constraint> constraints(
       const LinearSymbolic& first, const LinearSymbolic& second) const override;
 };
 
 // A spacer which represents a flexible space with a minimum value.
-class GeSpacer : Spacer {
+class GeSpacer : public BaseSpacer {
   [[nodiscard]] std::vector<kiwi::Constraint> constraints(
       const LinearSymbolic& first, const LinearSymbolic& second) const override;
 };
 
 // A spacer with a hard minimum and a preference for that minimum.
-class FlexSpacer : Spacer {
+class FlexSpacer : public BaseSpacer {
 public:
   FlexSpacer(int size, Strength str, Strength min_str, Strength eq_str);
 
@@ -56,5 +59,10 @@ private:
   Strength min_strength;
   Strength eq_strength;
 };
+
+using Spacer = std::variant<EqSpacer, LeSpacer, GeSpacer, FlexSpacer>;
+
+std::vector<kiwi::Constraint> create_constraints(
+    const Spacer& spacer, const LinearSymbolic& first, const LinearSymbolic& second);
 
 }  // namespace layout

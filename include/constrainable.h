@@ -1,5 +1,6 @@
 #pragma once
 
+#include "common.h"
 #include "strength.h"
 
 #include "kiwi/expression.h"
@@ -13,28 +14,9 @@ namespace layout {
 
 // An abstract constrainable class.
 struct Constrainable {
-  explicit Constrainable(const std::string& name)
-      : hug_width(ConstraintStrength::STRONG), hug_height(ConstraintStrength::STRONG),
-        resist_width(ConstraintStrength::STRONG), resist_height(ConstraintStrength::STRONG),
-        limit_width(ConstraintStrength::IGNORE), limit_height(ConstraintStrength::IGNORE) {
-    // Left boundary.
-    variables.try_emplace("left", name + "_left");
-    // Top boundary.
-    variables.try_emplace("top", name + "_top");
-    // Width.
-    variables.try_emplace("width", name + "_width");
-    // Height.
-    variables.try_emplace("height", name + "_height");
+  Constrainable() noexcept;
 
-    // Right boundary.
-    expressions.try_emplace("right", variables.at("left") + variables.at("width"));
-    // Bottom boundary.
-    expressions.try_emplace("bottom", variables.at("top") + variables.at("height"));
-    // Horizontal center.
-    expressions.try_emplace("h_center", variables.at("left") + 0.5 * variables.at("width"));
-    // Vertical center.
-    expressions.try_emplace("v_center", variables.at("top") + 0.5 * variables.at("height"));
-  }
+  [[nodiscard]] LinearSymbolic get(const std::string& name) const;
 
   std::unordered_map<std::string, kiwi::Variable> variables;
   std::unordered_map<std::string, kiwi::Expression> expressions;
@@ -58,27 +40,9 @@ struct Constrainable {
   ConstraintStrength limit_height;
 };
 
-// An abstract constrainable that contains other widgets.
-struct ContentsConstrainable : Constrainable {
-  explicit ContentsConstrainable(const std::string& name) : Constrainable(name) {
-    // Left contents boundary.
-    variables.try_emplace("contents_left", name + "_contents_left");
-    // Right contents boundary.
-    variables.try_emplace("contents_right", name + "_contents_right");
-    // Top contents boundary.
-    variables.try_emplace("contents_top", name + "_contents_top");
-    // Bottom contents boundary.
-    variables.try_emplace("contents_bottom", name + "_contents_bottom");
+Constrainable make_constrainable(const std::string& name);
 
-    // Contents width.
-    expressions.try_emplace("contents_width", variables.at("contents_right") - variables.at("contents_left"));
-    // Contents height.
-    expressions.try_emplace("contents_height", variables.at("contents_bottom") - variables.at("contents_top"));
-    // Contents horizontal center.
-    expressions.try_emplace("contents_h_center", variables.at("contents_left") + 0.5 * variables.at("contents_width"));
-    // Contents vertical center.
-    expressions.try_emplace("contents_v_center", variables.at("contents_top") + 0.5 * variables.at("contents_height"));
-  }
-};
+// An abstract constrainable that contains other widgets.
+Constrainable make_contents_constrainable(const std::string& name);
 
 }  // namespace layout
