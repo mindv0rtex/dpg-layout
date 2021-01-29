@@ -9,7 +9,7 @@ ConstraintHelper& ConstraintHelper::operator|(Strength str) {
   return *this;
 }
 
-[[nodiscard]] std::vector<kiwi::Constraint> ConstraintHelper::create_constraints(const Constrainable& c) const {
+[[nodiscard]] std::vector<kiwi::Constraint> ConstraintHelper::create_constraints(const Constrainable& c) {
   auto cns = this->constraints(c);
   if (!strength.empty() && !strength.ignored()) {
     std::transform(cns.begin(), cns.end(), cns.begin(), [&](auto& cn) { return cn | strength; });

@@ -2,21 +2,25 @@
 
 #include "box_helper.h"
 #include "constrainable.h"
+#include "constraint_helper.h"
 #include "spacers.h"
 
 #include <iterator>
 #include <utility>
 
 namespace layout {
-class SequenceHelper {
-public:
-  using Item_t = std::variant<LinearSymbolic, Constrainable, Spacer>;
-  SequenceHelper(std::string first_name, std::string last_name, int spacing = 10)
-      : anchor_names{std::move(first_name), std::move(last_name)}, spacing{spacing} {}
 
-  template<typename ForwardIterator>
-  [[nodiscard]] std::vector<kiwi::Constraint> constraints(ForwardIterator first, ForwardIterator last) const {
-    using T = typename std::iterator_traits<ForwardIterator>::value_type;
+using Item_t = std::variant<LinearSymbolic, Constrainable, Spacer>;
+
+template<typename Iterator>
+class SequenceHelper : public ConstraintHelper {
+public:
+  SequenceHelper(std::string first_name, std::string last_name, Iterator first, Iterator last, int spacing = 10)
+      : anchor_names{std::move(first_name), std::move(last_name)}, first{first}, last{last}, spacing{spacing} {}
+
+private:
+  [[nodiscard]] std::vector<kiwi::Constraint> constraints(const Constrainable&) override {
+    using T = typename std::iterator_traits<Iterator>::value_type;
     static_assert(std::is_same_v<std::decay_t<T>, Item_t>);
 
     if (std::holds_alternative<Spacer>(*first)) {
@@ -47,20 +51,21 @@ public:
 
       LinearSymbolic second_anchor = get_anchor(*(first + 1), anchor_names.second);
 
-      auto current_cns = create_constraints(s, first_anchor, second_anchor);
+      auto current_cns = ::layout::create_constraints(s, first_anchor, second_anchor);
       std::move(current_cns.begin(), current_cns.end(), std::back_inserter(cns));
     }
     return cns;
   }
 
-private:
-  LinearSymbolic get_anchor(const Item_t& item, const std::string& name) const {
+  [[nodiscard]] LinearSymbolic get_anchor(const Item_t& item, const std::string& name) const {
     return std::holds_alternative<LinearSymbolic>(item) ? std::get<LinearSymbolic>(item)
                                                         : std::get<Constrainable>(item).get(name);
   }
 
   // The anchor names to form a constraint pair.
   std::pair<std::string, std::string> anchor_names;
+
+  Iterator first, last;
 
   // Default spacing between items.
   int spacing;

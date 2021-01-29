@@ -1,17 +1,14 @@
-#include "common.h"
-#include "constrainable.h"
-#include "sequence_helper.h"
+#include "layout_helpers.h"
 
 #include "kiwi/debug.h"
 
+using namespace layout;
+
 int main() {
-  std::vector<layout::SequenceHelper::Item_t> v = {
-      layout::make_constrainable("foo"), layout::make_constrainable("bar"), layout::Spacer{10},
-      layout::make_constrainable("zee")};
+  std::vector<Item_t> v = {make_constrainable("foo"), make_constrainable("bar")};
 
-  layout::SequenceHelper sh("right", "left", 5);
-
-  auto cns = sh.constraints(v.begin(), v.end());
+  auto helper = horizontal(v.begin(), v.end(), 5);
+  auto cns    = helper->create_constraints(Constrainable());
 
   for (auto& c : cns) {
     kiwi::debug::dump(c);
